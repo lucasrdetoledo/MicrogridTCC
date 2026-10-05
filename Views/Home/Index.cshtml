@@ -1,0 +1,146 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var culture = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+}
+
+<section class="hero">
+    <div>
+        <p class="eyebrow">TCC de Engenharia Elétrica · Dados simulados</p>
+        <h1>Microgrid Inteligente</h1>
+        <p class="hero-subtitle">
+            Monitoramento didático da microgrid fotovoltaica: painel de 155 W, controlador PWM,
+            bateria AGM 12 V / 7 Ah, barramento CC 12 V e inversor 12 Vcc / 127 Vca.
+        </p>
+    </div>
+    <div class="hero-meta">
+        <span>Atualizado em @Model.CapturedAt.ToString("dd/MM/yyyy HH:mm", culture)</span>
+        <span class="badge-sim">Simulação</span>
+    </div>
+</section>
+
+<section class="kpi-grid" aria-label="Indicadores da microgrid">
+    <article class="kpi-card kpi-solar">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">☀</span>
+            <h2>Geração Solar</h2>
+        </header>
+        <p class="kpi-value">@Model.SolarPowerW.ToString("N1", culture) <small>W</small></p>
+        <ul class="kpi-metrics">
+            <li><span>Tensão</span><strong>@Model.SolarVoltageV.ToString("N1", culture) V</strong></li>
+            <li><span>Corrente</span><strong>@Model.SolarCurrentA.ToString("N2", culture) A</strong></li>
+        </ul>
+    </article>
+
+    <article class="kpi-card kpi-battery">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">🔋</span>
+            <h2>Bateria</h2>
+        </header>
+        <p class="kpi-value">@Model.BatterySocPercent.ToString("N1", culture) <small>% SOC</small></p>
+        <div class="soc-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@Model.BatterySocPercent.ToString(culture)">
+            <span style="width: @Model.BatterySocPercent.ToString(System.Globalization.CultureInfo.InvariantCulture)%"></span>
+        </div>
+        <ul class="kpi-metrics">
+            <li><span>Tensão</span><strong>@Model.BatteryVoltageV.ToString("N2", culture) V</strong></li>
+            <li><span>Corrente</span><strong>@Model.BatteryCurrentA.ToString("N2", culture) A</strong></li>
+            <li>
+                <span>Estado</span>
+                <strong class="@(Model.IsCharging ? "status-charge" : "status-discharge")">@Model.BatteryStatusLabel</strong>
+            </li>
+        </ul>
+    </article>
+
+    <article class="kpi-card">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">⚡</span>
+            <h2>Consumo Total</h2>
+        </header>
+        <p class="kpi-value">@Model.TotalConsumptionW.ToString("N1", culture) <small>W</small></p>
+        <p class="kpi-hint">Soma das cargas CC e CA no instante simulado.</p>
+    </article>
+
+    <article class="kpi-card">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">🔌</span>
+            <h2>Carga CC</h2>
+        </header>
+        <p class="kpi-value">@Model.DcLoadW.ToString("N1", culture) <small>W</small></p>
+        <p class="kpi-hint">Cargas alimentadas pelo barramento de 12 V.</p>
+    </article>
+
+    <article class="kpi-card">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">🏠</span>
+            <h2>Carga CA</h2>
+        </header>
+        <p class="kpi-value">@Model.AcLoadW.ToString("N1", culture) <small>W</small></p>
+        <p class="kpi-hint">Cargas em 127 Vca após o inversor.</p>
+    </article>
+
+    <article class="kpi-card kpi-status">
+        <header>
+            <span class="kpi-icon" aria-hidden="true">●</span>
+            <h2>Estado do Sistema</h2>
+        </header>
+        <p class="kpi-value status-online">@Model.SystemStatusLabel</p>
+        <p class="kpi-hint">Supervisão local em modo demonstração.</p>
+    </article>
+</section>
+
+<section class="panel" aria-labelledby="flow-title">
+    <h2 id="flow-title">Fluxo de Energia</h2>
+    <p class="panel-lead">Caminho elétrico da geração fotovoltaica até as cargas CC e CA.</p>
+    <div class="energy-flow">
+        <div class="flow-node">
+            <span class="flow-label">Painel Solar</span>
+            <small>155 W</small>
+        </div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">
+            <span class="flow-label">Controlador PWM</span>
+            <small>Carga da bateria</small>
+        </div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node flow-node-bus">
+            <span class="flow-label">Bateria / Barramento 12 V</span>
+            <small>AGM 12 V 7 Ah</small>
+        </div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-split">
+            <div class="flow-node">
+                <span class="flow-label">Carga CC</span>
+                <small>@Model.DcLoadW.ToString("N1", culture) W</small>
+            </div>
+            <div class="flow-branch">
+                <div class="flow-node">
+                    <span class="flow-label">Inversor</span>
+                    <small>12 Vcc → 127 Vca</small>
+                </div>
+                <span class="flow-arrow" aria-hidden="true">→</span>
+                <div class="flow-node">
+                    <span class="flow-label">Carga CA</span>
+                    <small>@Model.AcLoadW.ToString("N1", culture) W</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="panel" aria-labelledby="history-title">
+    <h2 id="history-title">Histórico</h2>
+    <p class="panel-lead">Geração solar e consumo total nas últimas 24 horas (série simulada).</p>
+    <div class="chart-wrap">
+        <canvas id="energyHistoryChart"
+                role="img"
+                aria-label="Gráfico de geração solar e consumo ao longo do tempo"
+                data-labels='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.History.Select(p => p.Timestamp.ToString("HH:mm"))))'
+                data-solar='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.History.Select(p => p.SolarPowerW)))'
+                data-consumption='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.History.Select(p => p.ConsumptionW)))'></canvas>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}
